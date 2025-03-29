@@ -231,7 +231,7 @@ export default function Page() {
                   <TableHead className="text-right">Anzahl</TableHead>
                   <TableHead className="text-right">Preis (€)</TableHead>
                   <TableHead className="text-right">Gesamtpreis (€)</TableHead>
-                  <TableHead className="text-right">Bewerber #</TableHead>
+                  <TableHead className="text-right">Bewerber</TableHead>
                   <TableHead className="text-right">Aktion</TableHead>
                 </TableRow>
               </TableHeader>
