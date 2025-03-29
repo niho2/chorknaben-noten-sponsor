@@ -1,103 +1,289 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Search, Music } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+
+// Define the Song type
+interface Song {
+  name: string;
+  komponist: string;
+  anzahl: number;
+  preis: number;
+  gesamtpreis: number;
+  bewerber: number;
+}
+
+// Sample data
+const songs: Song[] = [
+  {
+    name: "Lied Eins",
+    komponist: "Komponist A",
+    anzahl: 3,
+    preis: 10,
+    gesamtpreis: 30,
+    bewerber: 1,
+  },
+  {
+    name: "Lied Zwei",
+    komponist: "Komponist B",
+    anzahl: 2,
+    preis: 15,
+    gesamtpreis: 30,
+    bewerber: 20,
+  },
+  {
+    name: "Lied Drei",
+    komponist: "Komponist C",
+    anzahl: 1,
+    preis: 20,
+    gesamtpreis: 20,
+    bewerber: 3,
+  },
+];
+
+export default function Page() {
+  const [search, setSearch] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  // Filter songs based on search term in name or composer
+  const filteredSongs = songs.filter((song) => {
+    const term = search.toLowerCase();
+    return (
+      song.name.toLowerCase().includes(term) ||
+      song.komponist.toLowerCase().includes(term)
+    );
+  });
+
+  // Sort the filtered songs
+  const sortedSongs = [...filteredSongs].sort((a, b) => {
+    switch (sortBy) {
+      case "preis":
+        return a.preis - b.preis;
+      case "anzahl":
+        return a.anzahl - b.anzahl;
+      case "gesamtpreis":
+        return a.gesamtpreis - b.gesamtpreis;
+      case "komponist":
+        return a.komponist.localeCompare(b.komponist);
+      case "bewerber":
+        return a.bewerber - b.bewerber;
+      default:
+        return a.name.localeCompare(b.name);
+    }
+  });
+
+  const handleSponsorClick = (song: Song) => {
+    setSelectedSong(song);
+    setIsDialogOpen(true);
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted:", {
+      song: selectedSong,
+      sponsorInfo: formData,
+    });
+    setIsDialogOpen(false);
+    setFormData({ name: "", email: "", message: "" });
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="container mx-auto p-6">
+      <Card className="shadow-md">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Suche nach Lied oder Komponist..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 w-full"
+              />
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Sortieren nach" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Nach Name</SelectItem>
+                <SelectItem value="komponist">Nach Komponist</SelectItem>
+                <SelectItem value="preis">Nach Preis</SelectItem>
+                <SelectItem value="anzahl">Nach Anzahl</SelectItem>
+                <SelectItem value="gesamtpreis">Nach Gesamtpreis</SelectItem>
+                <SelectItem value="bewerber">Nach Bewerber</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <ScrollArea className="h-[calc(100vh-12rem)]">
+            <Table>
+              <TableHeader className="sticky top-0 bg-white dark:bg-slate-950">
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Komponist</TableHead>
+                  <TableHead className="text-right">Anzahl</TableHead>
+                  <TableHead className="text-right">Preis (€)</TableHead>
+                  <TableHead className="text-right">Gesamtpreis (€)</TableHead>
+                  <TableHead className="text-right">Bewerber #</TableHead>
+                  <TableHead className="text-right">Aktion</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedSongs.length > 0 ? (
+                  sortedSongs.map((song, index) => (
+                    <TableRow key={index} className="hover:bg-slate-50 dark:hover:bg-slate-900">
+                      <TableCell className="font-medium">{song.name}</TableCell>
+                      <TableCell>{song.komponist}</TableCell>
+                      <TableCell className="text-right">{song.anzahl}</TableCell>
+                      <TableCell className="text-right">{song.preis.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">{song.gesamtpreis.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">{song.bewerber}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleSponsorClick(song)}
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          Sponsern
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                      Keine Lieder gefunden. Bitte versuchen Sie einen anderen Suchbegriff.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      {/* Sponsorship Dialog with Contact Form */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Music className="h-5 w-5" />
+              Lied sponsern
+            </DialogTitle>
+            <DialogDescription>
+              {selectedSong && (
+                <span>
+                  Sie möchten das Lied <strong>{selectedSong.name}</strong> von {selectedSong.komponist} sponsern.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input 
+                id="name" 
+                placeholder="Max Mustermann" 
+                required 
+                value={formData.name}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-Mail</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="max@beispiel.de" 
+                required 
+                value={formData.email}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Nachricht</Label>
+              <Textarea 
+                id="message" 
+                placeholder="Ihre Nachricht hier..." 
+                required 
+                value={formData.message}
+                onChange={handleFormChange}
+              />
+            </div>
+            
+            {selectedSong && (
+              <div className="rounded-md bg-slate-50 dark:bg-slate-900 p-3 text-sm">
+                <div className="font-medium">Sponsoring-Details:</div>
+                <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+                  <div>Lied:</div>
+                  <div className="text-foreground">{selectedSong.name}</div>
+                  <div>Komponist:</div>
+                  <div className="text-foreground">{selectedSong.komponist}</div>
+                  <div>Preis pro Stück:</div>
+                  <div className="text-foreground">{selectedSong.preis.toFixed(2)} €</div>
+                  <div>Anzahl:</div>
+                  <div className="text-foreground">{selectedSong.anzahl}</div>
+                  <div>Gesamtpreis:</div>
+                  <div className="text-foreground font-medium">{selectedSong.gesamtpreis.toFixed(2)} €</div>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter className="sm:justify-end">
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Abbrechen</Button>
+              </DialogClose>
+              <Button type="submit">Sponsoring absenden</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
