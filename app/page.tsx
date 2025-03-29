@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Search, Music } from "lucide-react";
+import { Search, Music, Check } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -32,6 +32,13 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
+import { toast } from "sonner"
+
 
 // Define the Song type
 interface Song {
@@ -59,7 +66,7 @@ const songs: Song[] = [
     anzahl: 2,
     preis: 15,
     gesamtpreis: 30,
-    bewerber: 20,
+    bewerber: 2,
   },
   {
     name: "Lied Drei",
@@ -81,6 +88,8 @@ export default function Page() {
     email: "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
 
   // Filter songs based on search term in name or composer
   const filteredSongs = songs.filter((song) => {
@@ -112,6 +121,7 @@ export default function Page() {
   const handleSponsorClick = (song: Song) => {
     setSelectedSong(song);
     setIsDialogOpen(true);
+    setShowSuccess(false);
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -121,14 +131,66 @@ export default function Page() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", {
-      song: selectedSong,
-      sponsorInfo: formData,
-    });
-    setIsDialogOpen(false);
-    setFormData({ name: "", email: "", message: "" });
+    
+    if (!selectedSong) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Prepare the data to send to the API
+      const sponsorshipData = {
+        ...formData,
+        songDetails: {
+          name: selectedSong.name,
+          komponist: selectedSong.komponist,
+          anzahl: selectedSong.anzahl,
+          preis: selectedSong.preis,
+          gesamtpreis: selectedSong.gesamtpreis,
+        }
+      };
+      
+      // Send the data to our API endpoint
+      const response = await fetch('/api/sponsor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sponsorshipData),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Fehler beim Senden der Anfrage');
+      }
+      
+      // Show success message
+      setShowSuccess(true);
+      
+      // Reset form after a delay
+      setTimeout(() => {
+        setIsDialogOpen(false);
+        setFormData({ name: "", email: "", message: "" });
+        setShowSuccess(false);
+        
+        // Show toast notification
+        toast.success("Sponsoring erfolgreich!",{
+          description: `Eine Bestätigungs-E-Mail wurde an ${formData.email} gesendet.`,
+          duration: 5000,
+        });
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast.error("Fehler beim Sponsoring",{        
+        description: "Es gab ein Problem bei der Verarbeitung Ihrer Anfrage. Bitte versuchen Sie es später erneut.",        
+        duration: 5000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -216,7 +278,7 @@ export default function Page() {
               Lied sponsern
             </DialogTitle>
             <DialogDescription>
-              {selectedSong && (
+              {selectedSong && !showSuccess && (
                 <span>
                   Sie möchten das Lied <strong>{selectedSong.name}</strong> von {selectedSong.komponist} sponsern.
                 </span>
@@ -224,64 +286,81 @@ export default function Page() {
             </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input 
-                id="name" 
-                placeholder="Max Mustermann" 
-                required 
-                value={formData.name}
-                onChange={handleFormChange}
-              />
+          {showSuccess ? (
+            <div className="py-6">
+              <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
+                <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <AlertTitle>Sponsoring erfolgreich!</AlertTitle>
+                <AlertDescription>
+                  Vielen Dank für Ihr Sponsoring. Eine Bestätigungs-E-Mail wurde an {formData.email} gesendet.
+                </AlertDescription>
+              </Alert>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="max@beispiel.de" 
-                required 
-                value={formData.email}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="message">Nachricht</Label>
-              <Textarea 
-                id="message" 
-                placeholder="Ihre Nachricht hier..." 
-                required 
-                value={formData.message}
-                onChange={handleFormChange}
-              />
-            </div>
-            
-            {selectedSong && (
-              <div className="rounded-md bg-slate-50 dark:bg-slate-900 p-3 text-sm">
-                <div className="font-medium">Sponsoring-Details:</div>
-                <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
-                  <div>Lied:</div>
-                  <div className="text-foreground">{selectedSong.name}</div>
-                  <div>Komponist:</div>
-                  <div className="text-foreground">{selectedSong.komponist}</div>
-                  <div>Preis pro Stück:</div>
-                  <div className="text-foreground">{selectedSong.preis.toFixed(2)} €</div>
-                  <div>Anzahl:</div>
-                  <div className="text-foreground">{selectedSong.anzahl}</div>
-                  <div>Gesamtpreis:</div>
-                  <div className="text-foreground font-medium">{selectedSong.gesamtpreis.toFixed(2)} €</div>
-                </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input 
+                  id="name" 
+                  placeholder="Max Mustermann" 
+                  required 
+                  value={formData.name}
+                  onChange={handleFormChange}
+                  disabled={isSubmitting}
+                />
               </div>
-            )}
-            
-            <DialogFooter className="sm:justify-end">
-              <DialogClose asChild>
-                <Button type="button" variant="outline">Abbrechen</Button>
-              </DialogClose>
-              <Button type="submit">Sponsoring absenden</Button>
-            </DialogFooter>
-          </form>
+              <div className="space-y-2">
+                <Label htmlFor="email">E-Mail</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="max@beispiel.de" 
+                  required 
+                  value={formData.email}
+                  onChange={handleFormChange}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="message">Nachricht</Label>
+                <Textarea 
+                  id="message" 
+                  placeholder="Ihre Nachricht hier..." 
+                  required 
+                  value={formData.message}
+                  onChange={handleFormChange}
+                  disabled={isSubmitting}
+                />
+              </div>
+              
+              {selectedSong && (
+                <div className="rounded-md bg-slate-50 dark:bg-slate-900 p-3 text-sm">
+                  <div className="font-medium">Sponsoring-Details:</div>
+                  <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+                    <div>Lied:</div>
+                    <div className="text-foreground">{selectedSong.name}</div>
+                    <div>Komponist:</div>
+                    <div className="text-foreground">{selectedSong.komponist}</div>
+                    <div>Preis pro Stück:</div>
+                    <div className="text-foreground">{selectedSong.preis.toFixed(2)} €</div>
+                    <div>Anzahl:</div>
+                    <div className="text-foreground">{selectedSong.anzahl}</div>
+                    <div>Gesamtpreis:</div>
+                    <div className="text-foreground font-medium">{selectedSong.gesamtpreis.toFixed(2)} €</div>
+                  </div>
+                </div>
+              )}
+              
+              <DialogFooter className="sm:justify-end">
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" disabled={isSubmitting}>Abbrechen</Button>
+                </DialogClose>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Wird gesendet..." : "Sponsoring absenden"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
