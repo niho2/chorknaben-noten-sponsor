@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -50,35 +50,8 @@ interface Song {
   bewerber: number;
 }
 
-// Sample data
-const songs: Song[] = [
-  {
-    name: "Lied Eins",
-    komponist: "Komponist A",
-    anzahl: 3,
-    preis: 10,
-    gesamtpreis: 30,
-    bewerber: 1,
-  },
-  {
-    name: "Lied Zwei",
-    komponist: "Komponist B",
-    anzahl: 2,
-    preis: 15,
-    gesamtpreis: 30,
-    bewerber: 2,
-  },
-  {
-    name: "Lied Drei",
-    komponist: "Komponist C",
-    anzahl: 1,
-    preis: 20,
-    gesamtpreis: 20,
-    bewerber: 3,
-  },
-];
-
 export default function Page() {
+  const [songs, setSongs] = useState<Song[]>([]);
   const [search, setSearch] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -90,6 +63,18 @@ export default function Page() {
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
+
+  const fetchSongs = () => {
+    fetch("/api/songs")
+      .then((res) => res.json())
+      .then((data) => setSongs(data))
+      .catch((error) => console.error("Fehler beim Laden der Songs:", error));
+  };
+
+
+  useEffect(() => {
+    fetchSongs();
+  }, []);
 
   // Filter songs based on search term in name or composer
   const filteredSongs = songs.filter((song) => {
@@ -168,7 +153,7 @@ export default function Page() {
       
       // Show success message
       setShowSuccess(true);
-      
+      fetchSongs();
       // Reset form after a delay
       setTimeout(() => {
         setIsDialogOpen(false);
@@ -179,7 +164,7 @@ export default function Page() {
         toast.success("Sponsoring erfolgreich!",{
           description: `Eine Bestätigungs-E-Mail wurde an ${formData.email} gesendet.`,
           duration: 5000,
-        });
+        });        
       }, 3000);
       
     } catch (error) {
