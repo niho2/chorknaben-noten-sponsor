@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Song {
+  id          Int     @id @default(autoincrement())
+  name        String
+  komponist   String
+  anzahl      Int
+  preis       Float
+  gesamtpreis Float
+  bewerber    Int
+
+  sponsors    Sponsor[]
+}
+
+model Sponsor {
+  id      Int    @id @default(autoincrement())
+  name    String
+  email   String
+  message String
+  songId  Int
+  song    Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+}
