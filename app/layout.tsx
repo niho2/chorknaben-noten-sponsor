@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Noten Chorknaben Biberach",
-  description: "Noten sponsoren für Chorknaben Biberach",
+  description: "Noten sponsern für Chorknaben Biberach",
 };
 
 export default function RootLayout({

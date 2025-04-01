@@ -83,8 +83,10 @@ export default function AdminDashboard() {
     if (res.ok) {
       setNotenData(notenData.filter((song) => song.id !== id));
       setSelectedSong(null);
+      toast.success("Song erfolgreich entfernt")
     } else {
       console.error("Fehler beim Löschen des Songs");
+      toast.error("Fehler beim Entfernen des Songs")
     }
   }
 
