@@ -16,6 +16,9 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Download, Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface Song {
   id: number;
@@ -36,6 +39,14 @@ interface Sponsor {
   }
 }
 
+interface CSVNoten {
+  name: string;
+  komponist: string;
+  anzahl: number;
+  preis: number;
+  gesamtpreis: number;
+}
+
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -44,6 +55,7 @@ export default function AdminDashboard() {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<{name: string, message: string} | null>(null);
   const [selectedSponsorSong, setSelectedSponsorSong] = useState<Song | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/songs")
@@ -81,6 +93,127 @@ export default function AdminDashboard() {
     return notenData.find(song => song.name === songName) || null;
   };
 
+  const exportToCSV = () => {
+    // CSV Header
+    const headers = [
+      "Sponsor Name",
+      "Email",
+      "Nachricht",
+      "Song Name",
+      "Song Komponist",
+      "Song Anzahl",
+      "Song Preis pro Stück",
+      "Song Gesamtpreis",
+      "Song Bewerber"
+    ];
+
+    // CSV Data
+    const csvData = sponsorenData.map(sponsor => {
+      const song = findSongByName(sponsor.song.name);
+      return [
+        sponsor.name,
+        sponsor.email,
+        sponsor.message,
+        sponsor.song.name,
+        song?.komponist || "",
+        song?.anzahl || "",
+        song?.preis ? `${song.preis.toFixed(2)} €` : "",
+        song?.gesamtpreis ? `${song.gesamtpreis.toFixed(2)} €` : "",
+        song?.bewerber || ""
+      ];
+    });
+
+    // Combine headers and data
+    const csvContent = [
+      headers.join(","),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `sponsoren_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const text = await file.text();
+      const rows = text.split('\n').map(row => row.trim()).filter(row => row);
+      
+      // Skip header row and parse data
+      const noten: CSVNoten[] = rows.slice(1).map(row => {
+        const [name, komponist, anzahl, preis, gesamtpreis] = row
+          .split(',')
+          .map(cell => cell.replace(/"/g, '').trim());
+        
+        return {
+          name,
+          komponist,
+          anzahl: parseInt(anzahl),
+          preis: parseFloat(preis.replace('€', '').trim()),
+          gesamtpreis: parseFloat(gesamtpreis.replace('€', '').trim())
+        };
+      });
+
+      // Validate data
+      const invalidRows = noten.filter(note => 
+        !note.name || 
+        !note.komponist || 
+        isNaN(note.anzahl) || 
+        isNaN(note.preis) || 
+        isNaN(note.gesamtpreis)
+      );
+
+      if (invalidRows.length > 0) {
+        throw new Error('Ungültige Daten in der CSV-Datei gefunden');
+      }
+
+      // Send data to API
+      const response = await fetch('/api/admin/songs/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(noten),
+      });
+
+      if (!response.ok) {
+        throw new Error('Fehler beim Hochladen der Noten');
+      }
+
+      // Refresh data and show success message
+      fetch("/api/admin/songs")
+        .then((res) => res.json())
+        .then((data) => setNotenData(data));
+
+      toast.success("Noten erfolgreich hochgeladen", {
+        description: `${noten.length} Noten wurden hinzugefügt.`,
+        duration: 5000,
+      });
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error("Fehler beim Hochladen", {
+        description: "Die CSV-Datei konnte nicht verarbeitet werden. Bitte überprüfen Sie das Format.",
+        duration: 5000,
+      });
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -93,6 +226,26 @@ export default function AdminDashboard() {
           <TabsTrigger value="sponsoren">Sponsoren</TabsTrigger>
         </TabsList>
         <TabsContent value="noten">
+          <div className="flex justify-end mb-4">
+            <div className="relative">
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={handleCSVUpload}
+                className="hidden"
+                id="csv-upload"
+                disabled={isUploading}
+              />
+              <Button
+                onClick={() => document.getElementById('csv-upload')?.click()}
+                className="flex items-center gap-2"
+                disabled={isUploading}
+              >
+                <Upload className="h-4 w-4" />
+                {isUploading ? "Wird hochgeladen..." : "CSV hochladen"}
+              </Button>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -144,6 +297,15 @@ export default function AdminDashboard() {
           )}
         </TabsContent>
         <TabsContent value="sponsoren">
+          <div className="flex justify-end mb-4">
+            <Button 
+              onClick={exportToCSV}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Als CSV exportieren
+            </Button>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
