@@ -7,6 +7,15 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Song {
   id: number;
@@ -33,6 +42,8 @@ export default function AdminDashboard() {
   const [notenData, setNotenData] = useState<Song[]>([]);
   const [sponsorenData, setSponsorenData] = useState<Sponsor[]>([]);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<{name: string, message: string} | null>(null);
+  const [selectedSponsorSong, setSelectedSponsorSong] = useState<Song | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/songs")
@@ -60,6 +71,15 @@ export default function AdminDashboard() {
       console.error("Fehler beim Löschen des Songs");
     }
   }
+
+  const truncateMessage = (message: string, maxLength: number = 50) => {
+    if (message.length <= maxLength) return message;
+    return message.substring(0, maxLength) + "...";
+  };
+
+  const findSongByName = (songName: string) => {
+    return notenData.find(song => song.name === songName) || null;
+  };
 
   return (
     <div className="p-6">
@@ -138,14 +158,98 @@ export default function AdminDashboard() {
                 <TableRow key={index}>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.email}</TableCell>
-                  <TableCell>{item.message}</TableCell>
-                  <TableCell>{item.song.name}</TableCell>
+                  <TableCell>
+                    <div className="max-w-[200px]">
+                      <span className="text-sm">{truncateMessage(item.message)}</span>
+                      {item.message.length > 50 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-2 text-xs"
+                          onClick={() => setSelectedMessage({name: item.name, message: item.message})}
+                        >
+                          Mehr
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary hover:text-primary/80"
+                      onClick={() => setSelectedSponsorSong(findSongByName(item.song.name))}
+                    >
+                      {item.song.name}
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TabsContent>
       </Tabs>
+
+      {/* Message Dialog */}
+      <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>
+        <DialogContent className="sm:max-w-md w-[95vw] max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Nachricht von {selectedMessage?.name}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="whitespace-pre-wrap break-words p-4 bg-slate-50 dark:bg-slate-900 rounded-md">
+              {selectedMessage?.message}
+            </div>
+          </ScrollArea>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Schließen</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Song Details Dialog */}
+      <Dialog open={!!selectedSponsorSong} onOpenChange={() => setSelectedSponsorSong(null)}>
+        <DialogContent className="sm:max-w-md w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Song Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Name</p>
+                <p className="font-medium">{selectedSponsorSong?.name}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Komponist</p>
+                <p className="font-medium">{selectedSponsorSong?.komponist}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Anzahl</p>
+                <p className="font-medium">{selectedSponsorSong?.anzahl}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Preis pro Stück</p>
+                <p className="font-medium">{selectedSponsorSong?.preis.toFixed(2)} €</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Gesamtpreis</p>
+                <p className="font-medium">{selectedSponsorSong?.gesamtpreis.toFixed(2)} €</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Bewerber</p>
+                <p className="font-medium">{selectedSponsorSong?.bewerber}</p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Schließen</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
