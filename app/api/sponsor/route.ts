@@ -7,8 +7,10 @@ const prisma = new PrismaClient();
 
 // Interface für die Anfrage-Daten
 interface SponsorshipRequest {
+  vorname: string;
   name: string;
   email: string;
+  telefon: string;
   message: string;
   songDetails: {
     name: string;
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
     const data: SponsorshipRequest = await request.json();
 
     // Validierung der Daten
-    if (!data.email || !data.name || !data.songDetails) {
+    if (!data.email || !data.name || !data.vorname || !data.telefon || !data.songDetails) {
       return NextResponse.json(
         { error: "Fehlende erforderliche Felder" },
         { status: 400 }
@@ -48,6 +50,8 @@ export async function POST(request: NextRequest) {
     // Sponsor in die Datenbank speichern
     const sponsor = await prisma.sponsor.create({
       data: {
+        vorname: data.vorname,
+        telefon: data.telefon,
         name: data.name,
         email: data.email,
         message: data.message,
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
     // E-Mail-Inhalt erstellen
     const emailContent = `
       <h1>Vielen Dank für Ihr Sponsoring!</h1>
-      <p>Hallo ${data.name},</p>
+      <p>Hallo ${data.vorname} ${data.name},</p>
       <p>Vielen Dank für Ihre Unterstützung. Wir haben Ihre Sponsoring-Anfrage für das folgende Lied erhalten:</p>
       
       <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -105,7 +109,9 @@ export async function POST(request: NextRequest) {
       subject: `Neue Sponsoring-Anfrage: ${song.name}`,
       html: `
         <h2>Neue Sponsoring-Anfrage</h2>
-        <p><strong>Von:</strong> ${data.name} (${data.email})</p>
+        <p><strong>Von:</strong> ${data.vorname} ${data.name}</p>
+        <p><strong>E-Mail:</strong> ${data.email}</p>
+        <p><strong>Telefon:</strong> ${data.telefon}</p>
         <p><strong>Lied:</strong> ${song.name} von ${song.komponist}</p>
         <p><strong>Gesamtbetrag:</strong> ${song.gesamtpreis.toFixed(2)} €</p>
         <p><strong>Nachricht:</strong> ${data.message}</p>

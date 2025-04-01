@@ -20,10 +20,12 @@ model Song {
 }
 
 model Sponsor {
-  id      Int    @id @default(autoincrement())
-  name    String
-  email   String
-  message String
-  songId  Int
-  song    Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+  id        Int    @id @default(autoincrement())
+  vorname   String
+  name      String
+  email     String
+  telefon   String
+  message   String
+  songId    Int
+  song      Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
 }

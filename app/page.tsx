@@ -57,8 +57,10 @@ export default function Page() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [formData, setFormData] = useState({
+    vorname: "",
     name: "",
     email: "",
+    telefon: "",
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -157,7 +159,7 @@ export default function Page() {
       // Reset form after a delay
       setTimeout(() => {
         setIsDialogOpen(false);
-        setFormData({ name: "", email: "", message: "" });
+        setFormData({ vorname: "", name: "", email: "", telefon: "", message: "" });
         setShowSuccess(false);
         
         // Show toast notification
@@ -292,7 +294,7 @@ export default function Page() {
 
       {/* Sponsorship Dialog with Contact Form */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Music className="h-5 w-5" />
@@ -320,12 +322,37 @@ export default function Page() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="vorname" className="text-sm sm:text-base">Vorname</Label>
+                <Input 
+                  id="vorname" 
+                  placeholder="Max" 
+                  required 
+                  value={formData.vorname}
+                  onChange={handleFormChange}
+                  disabled={isSubmitting}
+                  className="text-sm sm:text-base"
+                />
+              </div>
+              <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="name" className="text-sm sm:text-base">Name</Label>
                 <Input 
                   id="name" 
-                  placeholder="Max Mustermann" 
+                  placeholder="Mustermann" 
                   required 
                   value={formData.name}
+                  onChange={handleFormChange}
+                  disabled={isSubmitting}
+                  className="text-sm sm:text-base"
+                />
+              </div>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="telefon" className="text-sm sm:text-base">Telefon</Label>
+                <Input 
+                  id="telefon" 
+                  type="tel" 
+                  placeholder="+49 123 456789" 
+                  required 
+                  value={formData.telefon}
                   onChange={handleFormChange}
                   disabled={isSubmitting}
                   className="text-sm sm:text-base"

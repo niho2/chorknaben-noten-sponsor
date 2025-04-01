@@ -32,7 +32,9 @@ interface Song {
 
 interface Sponsor {
   name: string;
+  vorname: string;
   email: string;
+  telefon: string;
   message: string;
   song: {
     name: string;
@@ -53,7 +55,7 @@ export default function AdminDashboard() {
   const [notenData, setNotenData] = useState<Song[]>([]);
   const [sponsorenData, setSponsorenData] = useState<Sponsor[]>([]);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-  const [selectedMessage, setSelectedMessage] = useState<{name: string, message: string} | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<{vorname: string, name: string, message: string} | null>(null);
   const [selectedSponsorSong, setSelectedSponsorSong] = useState<Song | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -98,8 +100,10 @@ export default function AdminDashboard() {
   const exportToCSV = () => {
     // CSV Header
     const headers = [
-      "Sponsor Name",
+      "Vorname",
+      "Nachname",
       "Email",
+      "Telefon",
       "Nachricht",
       "Song Name",
       "Song Komponist",
@@ -113,8 +117,10 @@ export default function AdminDashboard() {
     const csvData = sponsorenData.map(sponsor => {
       const song = findSongByName(sponsor.song.name);
       return [
+        sponsor.vorname,
         sponsor.name,        
         sponsor.email,
+        sponsor.telefon,
         sponsor.message,
         sponsor.song.name,
         song?.komponist || "",
@@ -311,8 +317,10 @@ export default function AdminDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Vorname</TableHead>
+                <TableHead>Nachname</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Telefon</TableHead>
                 <TableHead>Message</TableHead>
                 <TableHead>Song</TableHead>
               </TableRow>
@@ -320,8 +328,10 @@ export default function AdminDashboard() {
             <TableBody>
               {sponsorenData.map((item, index) => (
                 <TableRow key={index}>
+                  <TableCell>{item.vorname}</TableCell>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.email}</TableCell>
+                  <TableCell>{item.telefon}</TableCell>
                   <TableCell>
                     <div className="max-w-[200px]">
                       <span className="text-sm">{truncateMessage(item.message)}</span>
@@ -330,7 +340,7 @@ export default function AdminDashboard() {
                           variant="ghost"
                           size="sm"
                           className="ml-2 text-xs"
-                          onClick={() => setSelectedMessage({name: item.name, message: item.message})}
+                          onClick={() => setSelectedMessage({vorname: item.vorname, name: item.name, message: item.message})}
                         >
                           Mehr
                         </Button>
@@ -358,7 +368,7 @@ export default function AdminDashboard() {
       <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>
         <DialogContent className="sm:max-w-md w-[95vw] max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Nachricht von {selectedMessage?.name}</DialogTitle>
+            <DialogTitle>Nachricht von {selectedMessage?.vorname} {selectedMessage?.name}</DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             <div className="whitespace-pre-wrap break-words p-4 bg-slate-50 dark:bg-slate-900 rounded-md">
