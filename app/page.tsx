@@ -179,21 +179,21 @@ export default function Page() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-2 sm:p-6">
       <Card className="shadow-md">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        <CardContent className="p-2 sm:p-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Suche nach Lied oder Komponist..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 w-full"
+                className="pl-8 w-full text-sm sm:text-base"
               />
             </div>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40 text-sm sm:text-base">
                 <SelectValue placeholder="Sortieren nach" />
               </SelectTrigger>
               <SelectContent>
@@ -208,61 +208,97 @@ export default function Page() {
           </div>
 
           <ScrollArea className="h-[calc(100vh-12rem)]">
-            <Table>
-              <TableHeader className="sticky top-0 bg-white dark:bg-slate-950">
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Komponist</TableHead>
-                  <TableHead className="text-right">Anzahl</TableHead>
-                  <TableHead className="text-right">Preis (€)</TableHead>
-                  <TableHead className="text-right">Gesamtpreis (€)</TableHead>
-                  <TableHead className="text-right">Bewerber</TableHead>
-                  <TableHead className="text-right">Aktion</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedSongs.length > 0 ? (
-                  sortedSongs.map((song, index) => (
-                    <TableRow key={index} className="hover:bg-slate-50 dark:hover:bg-slate-900">
-                      <TableCell className="font-medium">{song.name}</TableCell>
-                      <TableCell>{song.komponist}</TableCell>
-                      <TableCell className="text-right">{song.anzahl}</TableCell>
-                      <TableCell className="text-right">{song.preis.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{song.gesamtpreis.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{song.bewerber}</TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleSponsorClick(song)}
-                          className="bg-primary hover:bg-primary/90"
-                        >
-                          Sponsern
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                      Keine Lieder gefunden. Bitte versuchen Sie einen anderen Suchbegriff.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            {sortedSongs.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4">
+                  {sortedSongs.map((song, index) => (
+                    <Card key={index} className="p-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium text-base">{song.name}</h3>
+                            <p className="text-sm text-muted-foreground">{song.komponist}</p>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleSponsorClick(song)}
+                            className="bg-primary hover:bg-primary/90"
+                          >
+                            Sponsern
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="text-muted-foreground">Anzahl:</div>
+                          <div className="text-right">{song.anzahl}</div>
+                          <div className="text-muted-foreground">Preis pro Stück:</div>
+                          <div className="text-right">{song.preis.toFixed(2)} €</div>
+                          <div className="text-muted-foreground">Gesamtpreis:</div>
+                          <div className="text-right font-medium">{song.gesamtpreis.toFixed(2)} €</div>
+                          <div className="text-muted-foreground">Bewerber:</div>
+                          <div className="text-right">{song.bewerber}</div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-white dark:bg-slate-950">
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Komponist</TableHead>
+                        <TableHead className="text-right">Anzahl</TableHead>
+                        <TableHead className="text-right">Preis (€)</TableHead>
+                        <TableHead className="text-right">Gesamtpreis (€)</TableHead>
+                        <TableHead className="text-right">Bewerber</TableHead>
+                        <TableHead className="text-right">Aktion</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedSongs.map((song, index) => (
+                        <TableRow key={index} className="hover:bg-slate-50 dark:hover:bg-slate-900">
+                          <TableCell className="font-medium">{song.name}</TableCell>
+                          <TableCell>{song.komponist}</TableCell>
+                          <TableCell className="text-right">{song.anzahl}</TableCell>
+                          <TableCell className="text-right">{song.preis.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">{song.gesamtpreis.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">{song.bewerber}</TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleSponsorClick(song)}
+                              className="bg-primary hover:bg-primary/90"
+                            >
+                              Sponsern
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground text-sm sm:text-base">
+                Keine Lieder gefunden. Bitte versuchen Sie einen anderen Suchbegriff.
+              </div>
+            )}
           </ScrollArea>
         </CardContent>
       </Card>
 
       {/* Sponsorship Dialog with Contact Form */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Music className="h-5 w-5" />
               Lied sponsern
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm sm:text-base">
               {selectedSong && !showSuccess && (
                 <span>
                   Sie möchten das Lied <strong>{selectedSong.name}</strong> von {selectedSong.komponist} sponsern.
@@ -272,19 +308,19 @@ export default function Page() {
           </DialogHeader>
           
           {showSuccess ? (
-            <div className="py-6">
+            <div className="py-4 sm:py-6">
               <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
                 <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
-                <AlertTitle>Sponsoring erfolgreich!</AlertTitle>
-                <AlertDescription>
+                <AlertTitle className="text-sm sm:text-base">Sponsoring erfolgreich!</AlertTitle>
+                <AlertDescription className="text-sm sm:text-base">
                   Vielen Dank für Ihr Sponsoring. Eine Bestätigungs-E-Mail wurde an {formData.email} gesendet.
                 </AlertDescription>
               </Alert>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="name" className="text-sm sm:text-base">Name</Label>
                 <Input 
                   id="name" 
                   placeholder="Max Mustermann" 
@@ -292,10 +328,11 @@ export default function Page() {
                   value={formData.name}
                   onChange={handleFormChange}
                   disabled={isSubmitting}
+                  className="text-sm sm:text-base"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">E-Mail</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="email" className="text-sm sm:text-base">E-Mail</Label>
                 <Input 
                   id="email" 
                   type="email" 
@@ -304,10 +341,11 @@ export default function Page() {
                   value={formData.email}
                   onChange={handleFormChange}
                   disabled={isSubmitting}
+                  className="text-sm sm:text-base"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="message">Nachricht</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="message" className="text-sm sm:text-base">Nachricht</Label>
                 <Textarea 
                   id="message" 
                   placeholder="Ihre Nachricht hier..." 
@@ -315,13 +353,14 @@ export default function Page() {
                   value={formData.message}
                   onChange={handleFormChange}
                   disabled={isSubmitting}
+                  className="text-sm sm:text-base min-h-[100px] resize-none whitespace-pre-wrap break-words"
                 />
               </div>
               
               {selectedSong && (
-                <div className="rounded-md bg-slate-50 dark:bg-slate-900 p-3 text-sm">
+                <div className="rounded-md bg-slate-50 dark:bg-slate-900 p-2 sm:p-3 text-xs sm:text-sm">
                   <div className="font-medium">Sponsoring-Details:</div>
-                  <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+                  <div className="mt-1 grid grid-cols-2 gap-x-2 sm:gap-x-4 gap-y-1 text-muted-foreground">
                     <div>Lied:</div>
                     <div className="text-foreground">{selectedSong.name}</div>
                     <div>Komponist:</div>
@@ -336,11 +375,11 @@ export default function Page() {
                 </div>
               )}
               
-              <DialogFooter className="sm:justify-end">
+              <DialogFooter className="sm:justify-end flex-col sm:flex-row gap-2 sm:gap-0">
                 <DialogClose asChild>
-                  <Button type="button" variant="outline" disabled={isSubmitting}>Abbrechen</Button>
+                  <Button type="button" variant="outline" disabled={isSubmitting} className="w-full sm:w-auto text-sm sm:text-base">Abbrechen</Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto text-sm sm:text-base">
                   {isSubmitting ? "Wird gesendet..." : "Sponsoring absenden"}
                 </Button>
               </DialogFooter>
