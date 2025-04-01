@@ -195,7 +195,7 @@ export default function Page() {
               />
             </div>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-40 text-sm sm:text-base">
+              <SelectTrigger className="w-full sm:w-50 text-sm sm:text-base">
                 <SelectValue placeholder="Sortieren nach" />
               </SelectTrigger>
               <SelectContent>
