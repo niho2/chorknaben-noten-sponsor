@@ -58,6 +58,8 @@ export default function AdminDashboard() {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
+    if(status !== "authenticated") return;
+
     fetch("/api/admin/songs")
       .then((res) => res.json())
       .then((data) => setNotenData(data));
@@ -65,12 +67,12 @@ export default function AdminDashboard() {
     fetch("/api/admin/sponsors")
       .then((res) => res.json())
       .then((data) => setSponsorenData(data));
-  }, []);
+  }, [status]);
 
   useEffect(() => {
     if (status === "loading") return;
-    if (!session) router.push("/login");
-  }, [session, status, router]);
+    if (status === "unauthenticated") router.push("/login");
+  }, [status, router]);
 
   async function handleDeleteSong(id: number) {
     const res = await fetch(`/api/admin/songs/${id}`, {
@@ -111,7 +113,7 @@ export default function AdminDashboard() {
     const csvData = sponsorenData.map(sponsor => {
       const song = findSongByName(sponsor.song.name);
       return [
-        sponsor.name,
+        sponsor.name,        
         sponsor.email,
         sponsor.message,
         sponsor.song.name,

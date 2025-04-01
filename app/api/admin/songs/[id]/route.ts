@@ -16,15 +16,18 @@ async function checkAuth(req: NextRequest) {
   return true;
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const isAuthenticated = await checkAuth(req);
-
   if (!isAuthenticated) {
-    return NextResponse.json({ error: "Nicht autorisiert. Bitte einloggen." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Nicht autorisiert. Bitte einloggen." },
+      { status: 401 }
+    );
   }
 
-  try {
-    const songId = parseInt(params.id);
+  try {    
+    const { id } = await params;
+    const songId = parseInt(id);
 
     await prisma.song.delete({
       where: { id: songId },
@@ -32,9 +35,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     return NextResponse.json({ message: "Song erfolgreich gelöscht" });
   } catch (error) {
+    console.error("Error deleting song:", error);
     return NextResponse.json(
       { error: "Fehler beim Löschen des Songs" },
       { status: 500 }
     );
   }
 }
+
