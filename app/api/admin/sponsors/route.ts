@@ -32,6 +32,6 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json(sponsors);
   } catch (error) {
-    return NextResponse.json({ error: "Fehler beim Laden der Sponsoren." }, { status: 500 });
+    return NextResponse.json({ error: "Fehler beim Laden der Sponsoren: " + error }, { status: 500 });
   }
 }

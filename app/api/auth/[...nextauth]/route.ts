@@ -4,7 +4,7 @@ import { NextAuthOptions } from "next-auth";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "geheimespasswort"; // In .env setzen!
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Admin Login",

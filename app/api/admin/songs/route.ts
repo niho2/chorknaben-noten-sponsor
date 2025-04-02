@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(songs);
   } catch (error) {
     return NextResponse.json(
-      { error: "Fehler beim Abrufen der Songs" },
+      { error: "Fehler beim Abrufen der Songs: " + error },
       { status: 500 }
     );
   }
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(song, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Fehler beim Erstellen des Songs" },
+      { error: "Fehler beim Erstellen des Songs: " + error },
       { status: 500 }
     );
   }

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prüfen, ob der Song bereits existiert (nach Name und Komponist)
-    let song = await prisma.song.findFirst({
+    const song = await prisma.song.findFirst({
       where: { name: data.songDetails.name, komponist: data.songDetails.komponist },
     });
 
