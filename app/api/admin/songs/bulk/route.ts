@@ -38,27 +38,34 @@ export async function POST(req: NextRequest) {
     const invalidSongs = songs.filter(song => 
       !song.name || 
       !song.komponist || 
+      !song.besetzung ||
       typeof song.anzahl !== 'number' || 
       typeof song.preis !== 'number' || 
       typeof song.gesamtpreis !== 'number'
     );
 
     if (invalidSongs.length > 0) {
+      console.log("Invalid songs:", invalidSongs);
       return NextResponse.json(
-        { error: "Ungültige Daten in einigen Songs gefunden." },
+        { error: "Ungültige oder fehlende Daten in einigen Songs gefunden. Stellen Sie sicher, dass Name, Komponist, Besetzung, Anzahl, Preis und Gesamtpreis korrekt angegeben sind." },
         { status: 400 }
       );
     }
 
-    // Füge bewerber: 0 zu jedem Song hinzu
-    const songsWithBewerber = songs.map(song => ({
-      ...song,
-      bewerber: 0
+    // Füge bewerber: 0 zu jedem Song hinzu (oder übernehme aus Daten wenn vorhanden)
+    const songsWithDefaults = songs.map(song => ({
+      name: song.name,
+      komponist: song.komponist,
+      besetzung: song.besetzung,
+      anzahl: song.anzahl,
+      preis: song.preis,
+      gesamtpreis: song.gesamtpreis,
+      bewerber: song.bewerber !== undefined ? song.bewerber : 0
     }));
 
     // Bulk-Create mit Prisma
     const createdSongs = await prisma.song.createMany({
-      data: songsWithBewerber      
+      data: songsWithDefaults,
     });
 
     return NextResponse.json({

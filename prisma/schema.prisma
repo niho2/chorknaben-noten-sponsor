@@ -15,6 +15,7 @@ model Song {
   preis       Float
   gesamtpreis Float
   bewerber    Int
+  besetzung   String
 
   sponsors    Sponsor[]
 }

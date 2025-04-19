@@ -18,7 +18,9 @@ interface SponsorshipRequest {
     anzahl: number;
     preis: number;
     gesamtpreis: number;
+    besetzung: string;
   };
+  songId: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -27,24 +29,30 @@ export async function POST(request: NextRequest) {
     const data: SponsorshipRequest = await request.json();
 
     // Validierung der Daten
-    if (!data.email || !data.name || !data.vorname || !data.telefon || !data.songDetails) {
+    if (!data.email || !data.name || !data.vorname || !data.telefon || !data.songDetails || !data.songDetails.besetzung || !data.songId) {
       return NextResponse.json(
         { error: "Fehlende erforderliche Felder" },
         { status: 400 }
       );
     }
 
-    // Prüfen, ob der Song bereits existiert (nach Name und Komponist)
-    const song = await prisma.song.findFirst({
-      where: { name: data.songDetails.name, komponist: data.songDetails.komponist },
+    // Song direkt über die ID abrufen (sicherer und effizienter)
+    const song = await prisma.song.findUnique({
+      where: { id: data.songId },
     });
 
-    // Falls der Song noch nicht existiert, neuen Song erstellen
+    // Falls der Song nicht existiert
     if (!song) {
       return NextResponse.json(
-        { error: "Fehler bei der Bearbeitung der Sponsoring-Anfragem. Lied konnte nicht gefunden werden." },
+        { error: "Fehler bei der Bearbeitung der Sponsoring-Anfrage. Lied konnte nicht gefunden werden." },
         { status: 500 }
       );
+    }
+    
+    // Kleine Konsistenzprüfung (optional, aber gut)
+    if (song.name !== data.songDetails.name || song.komponist !== data.songDetails.komponist) {
+       console.warn("Inkonsistenz zwischen übermittelter Song-ID und Song-Details entdeckt.");
+       // Hier könnte man entscheiden, ob man abbricht oder mit den DB-Daten weitermacht
     }
 
     // Sponsor in die Datenbank speichern
@@ -85,6 +93,7 @@ export async function POST(request: NextRequest) {
       <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
         <p><strong>Lied:</strong> ${song.name}</p>
         <p><strong>Komponist:</strong> ${song.komponist}</p>
+        <p><strong>Besetzung:</strong> ${song.besetzung}</p>
         <p><strong>Anzahl:</strong> ${song.anzahl}</p>
         <p><strong>Preis pro Stück:</strong> ${song.preis.toFixed(2)} €</p>
         <p><strong>Gesamtbetrag:</strong> ${song.gesamtpreis.toFixed(2)} €</p>
@@ -113,6 +122,7 @@ export async function POST(request: NextRequest) {
         <p><strong>E-Mail:</strong> ${data.email}</p>
         <p><strong>Telefon:</strong> ${data.telefon}</p>
         <p><strong>Lied:</strong> ${song.name} von ${song.komponist}</p>
+        <p><strong>Besetzung:</strong> ${song.besetzung}</p>
         <p><strong>Gesamtbetrag:</strong> ${song.gesamtpreis.toFixed(2)} €</p>
         <p><strong>Nachricht:</strong> ${data.message}</p>
       `,

@@ -43,3 +43,38 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 }
 
+// Song aktualisieren
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const isAuthenticated = await checkAuth(req);
+  if (!isAuthenticated) {
+    return NextResponse.json(
+      { error: "Nicht autorisiert. Bitte einloggen." },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const { id } = await params;
+    const songId = parseInt(id);
+    const data = await req.json();
+
+    // Entferne leere oder null Werte, um nur vorhandene Felder zu aktualisieren
+    const updateData = Object.fromEntries(
+      Object.entries(data).filter(([_, v]) => v !== null && v !== '')
+    );
+
+    const updatedSong = await prisma.song.update({
+      where: { id: songId },
+      data: updateData,
+    });
+
+    return NextResponse.json(updatedSong);
+  } catch (error) {
+    console.error("Error updating song:", error);
+    return NextResponse.json(
+      { error: "Fehler beim Aktualisieren des Songs" },
+      { status: 500 }
+    );
+  }
+}
+
